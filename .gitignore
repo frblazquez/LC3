@@ -1,0 +1,2 @@
+# Do not add train and test dataset once uncompressed
+*.csv 
