@@ -1,2 +1,7 @@
 # Do not add train and test dataset once uncompressed
 *.csv 
+
+# Do not add jupyter notebook folders
+.ipynb_checkpoints/
+__pycache__/
+
