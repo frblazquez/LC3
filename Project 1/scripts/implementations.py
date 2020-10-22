@@ -48,11 +48,147 @@ def ridge_regression(y, tx, lamb):
     loss = 1/2*np.mean(err**2)
     return w, loss
 
+def sigmoid(t): 
+    """Sigmoid function.
+    Parameters
+    ----------
+    t : float
+        exponent
+    Returns
+    -------
+    s : float
+        sigmoid function result
+    """
+    return 1.0 / (1.0 + np.exp(-t))
+
+
+def calculate_loss(y, tx, w):
+    """
+    compute the negative log likelihood for the logistic regression.
+    INPUTS: y
+            X
+            w
+    OUTPUTS: negative log likelihood
+    """
+    epsilon = 1e-5  
+    pred = sigmoid(tx.dot(w))
+    loss = y.T.dot(np.log(pred + epsilon)) + (1 - y).T.dot(np.log(1 - pred + epsilon))
+    return np.squeeze(- loss)
+
+def calculate_gradient(y, tx, w):
+    """compute the gradient, in a given point w, of the loss for the logistic regression.
+    INPUTS: y
+            X
+            w
+    OUTPUTS: the gradient vector
+    """
+    return tx.T.dot(sigmoid(tx.dot(w))-y)
+
+
+def learning_by_gradient_descent(y, tx, w, gamma):
+    """
+    Return the loss and the updated w.
+    INPUTS: y
+            X
+            w
+            gamma := the step size
+    OUTPUTS:w
+            loss
+    """
+    grad = calculate_gradient(y, tx, w)
+    loss = calculate_loss(y, tx, w)
+    w = w - gamma * grad
+    
+    return w, loss
+
+
 def logistic_regression(y, tx, initial_w, max_iters, gamma):
-    raise NotImplementedError
+    """
+    Logistic regression via gradient descent
+    INPUTS:
+            y
+            X
+            initial_w := the initialization of w for the algorithm
+            max_iters := max number of iterations
+            gamma := step size gamma
+            
+    
+    OUTPUTS:
+            w*, loss
+    """
+    y_ = (y-1)/2
+    w = initial_w
+    
+    threshold = 1e-8
+
+    # init parameters
+    losses = []
+  
+    # start the logistic regression
+    for iter in range(max_iters):
+        # get loss and update w.
+        w, loss = learning_by_gradient_descent(y_, tx, w, gamma)
+        
+        if iter % 10 == 0:
+            print("Current iteration={i}, loss={l}".format(i=iter, l=loss))
+                   
+        # converge criterion
+        losses.append(loss)
+        if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < threshold:
+            break
+    
+    return w, loss
+
+
+def learning_by_penalized_gradient(y, tx, w, gamma, lambda_):
+    """
+    Do one step of gradient descent, using the penalized logistic regression.
+    Return the loss and updated w.
+    """
+    loss, gradient = penalized_logistic_regression(y, tx, w, lambda_)
+    w = w - gamma * gradient
+    return loss, w
+
+def penalized_logistic_regression(y, tx, w, lambda_):
+    """return the loss and gradient."""
+    
+    loss = calculate_loss(y, tx, w) + lambda_ * np.squeeze(w.T.dot(w))
+    gradient = calculate_gradient(y, tx, w) + 2 * lambda_ * w
+    return loss, gradient
 
 def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
-    raise NotImplementedError
+    """
+    Regularized logistic regression via gradient descent
+    INPUTS:
+            y
+            X
+            max_iter := max number of iterations
+            gamma := step size gamma
+            lambda := penalizing factor lambda
+            threshold := threshold for the update of the loss
+            
+    
+    OUTPUTS:
+            w*, loss
+    """
+    y_ = (y-1)/2
+    threshold = 1e-8
 
+    # init parameters
+    losses = []
 
+    w = initial_w
 
+    # start the logistic regression
+    for iter in range(max_iters):
+        # get loss and update w.
+        loss, w = learning_by_penalized_gradient(y_, tx, w, gamma, lambda_)
+        if iter % 10 == 0:
+            print("Current iteration={i}, loss={l}".format(i=iter, l=loss))
+        
+        # converge criterion
+        losses.append(loss)
+        if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < threshold:
+            break
+        
+    return w, loss
