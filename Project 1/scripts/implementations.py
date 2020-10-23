@@ -56,25 +56,20 @@ def sigmoid(t):
 def calculate_loss(y, tx, w):
     """
     compute the negative log likelihood for the logistic regression.
-    INPUTS: y #### Do not put inputs if they don't need to be described!
-            X
-            w
+
     OUTPUTS: negative log likelihood
     """
-    # When you tested this, where does y come from??
+
     epsilon = 1e-5  
     pred = sigmoid(tx.dot(w))
-    loss = y.T.dot(np.log(pred + epsilon)) + (1 - y).T.dot(np.log(1 - pred + epsilon)) # Reviewed
+    loss = y.T.dot(np.log(pred + epsilon)) + (1 - y).T.dot(np.log(1 - pred + epsilon)) 
     return np.squeeze(- loss)
 
 def calculate_gradient(y, tx, w):
     """compute the gradient, in a given point w, of the loss for the logistic regression.
-    INPUTS: y
-            X
-            w
-    OUTPUTS: the gradient vector ### Of course calculate_gradient computes the gradient! Not necessary!
-    """
-    return tx.T.dot(sigmoid(tx.dot(w))-y) # Reviewed
+
+
+    return tx.T.dot(sigmoid(tx.dot(w))-y) 
 
 
 def learning_by_gradient_descent(y, tx, w, gamma):
@@ -108,7 +103,7 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
     OUTPUTS:
             w*, loss
     """
-    y_ = (y-1)/2 # IMPORTANT! Shouldn't it be +1 instead of -1??
+    y_ = (y+1)/2 
     w = initial_w
     
     threshold = 1e-8
@@ -163,7 +158,7 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
     OUTPUTS:
             w*, loss
     """
-    y_ = (y-1)/2 # IMPORTANT! Shouldn't it be +1 instead of -1??
+    y_ = (y+1)/2 
     threshold = 1e-8
 
     # init parameters
