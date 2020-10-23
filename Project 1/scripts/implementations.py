@@ -67,9 +67,12 @@ def calculate_loss(y, tx, w):
 
 def calculate_gradient(y, tx, w):
     """compute the gradient, in a given point w, of the loss for the logistic regression.
-
-
-    return tx.T.dot(sigmoid(tx.dot(w))-y) 
+    INPUTS: y
+            X
+            w
+    OUTPUTS: the gradient vector
+    """
+    return tx.T.dot(sigmoid(tx.dot(w))-y)
 
 
 def learning_by_gradient_descent(y, tx, w, gamma):
@@ -103,7 +106,7 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
     OUTPUTS:
             w*, loss
     """
-    y_ = (y+1)/2 
+    y_ = (y+1)/2
     w = initial_w
     
     threshold = 1e-8
@@ -115,10 +118,8 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
     for iter in range(max_iters):
         # get loss and update w.
         w, loss = learning_by_gradient_descent(y_, tx, w, gamma)
-        
-        if iter % 10 == 0:
-            print("Current iteration={i}, loss={l}".format(i=iter, l=loss))
-                   
+        loss = loss/len(y)
+                  
         # converge criterion
         losses.append(loss)
         if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < threshold:
@@ -158,7 +159,7 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
     OUTPUTS:
             w*, loss
     """
-    y_ = (y+1)/2 
+    y_ = (y+1)/2
     threshold = 1e-8
 
     # init parameters
@@ -170,8 +171,7 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
     for iter in range(max_iters):
         # get loss and update w.
         loss, w = learning_by_penalized_gradient(y_, tx, w, gamma, lambda_)
-        if iter % 10 == 0:
-            print("Current iteration={i}, loss={l}".format(i=iter, l=loss))
+        loss/= len(y)
         
         # converge criterion
         losses.append(loss)
