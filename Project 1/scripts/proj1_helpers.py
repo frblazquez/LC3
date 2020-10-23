@@ -23,7 +23,8 @@ def load_csv_data(data_path, sub_sample=False):
 
     return yb, input_data, ids
 
-
+# We don't have to be afraid of modifying this if needed! 
+# (for getting a more ad hoc model)
 def predict_labels(weights, data):
     """Generates class predictions given weights, and a test data matrix"""
     y_pred = np.dot(data, weights)
