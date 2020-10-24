@@ -31,26 +31,32 @@ def remove_highly_correlated_features(y, tx, threshold):
 def remove_features_with_MV(y, tx, MV, threshold):
     return np.delete(tx,np.where(np.count_nonzero(tx == MV, axis=0)/tx.shape[0]>threshold),axis=1)
 
+# Removes points in tx with missing values, it doesn't modify y!
 def remove_points_with_MV(y, tx, MV):
-    points_with_MV = np.where(np.count_nonzero(tx == MV, axis=1)>0)
-    tx = np.delete(tx, points_with_MV, axis=0)
+    #points_with_MV = np.where(np.count_nonzero(tx == MV, axis=1)>0)
+    #tx = np.delete(tx, points_with_MV, axis=0)
     #y  = np.delete(y,  points_with_MV, axis=0)
-    return tx #, y
+    return np.delete(tx, np.where(np.count_nonzero(tx == MV, axis=1)>0, axis=0))
 
+# Replaces every missing value entry with the average of valid values in that feature (modifies tx)
 def replace_MV_by_average(y, tx, MV):
-    avgs = np.avg(remove_points_with_MV(y, tx, MV))
-    # Work in progress
-    raise NotImplementedError
+    # NOT CORRECT!    
+    tx[tx == MV] = np.mean(remove_points_with_MV(y, tx, MV))
 
+# Replaces every missing value entry with zero (modifies tx)
 def replace_MV_by_zero(y, tx, MV):
-    raise NotImplementedError
+    tx[tx == MV] = 0
 
+# Removes points deviated from the mean more than a std factor given
 def remove_outliers(y, tx, threshold):
-    raise NotImplementedError
+    # NOT CORRECT!
+    return tx[np.linalg.norm(tx - np.mean(tx,axis=0)) < threshold*np.std(tx)]
     
+# Z standarization of the data
 def standarize(y, tx):
-    raise NotImplementedError
+    return (tx - np.mean(tx, axis=0)) / np.std(tx, axis=0)
 
+# 
 def feature_augmentation(y, tx):
     raise NotImplementedError
 
