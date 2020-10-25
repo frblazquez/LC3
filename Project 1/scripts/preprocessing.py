@@ -32,23 +32,20 @@ def remove_points_with_MV(y, tx, MV=-999):
 
 # Replaces every missing value entry with the average of valid values in that feature (modifies tx)
 def replace_MV_by_average(y, tx, MV=-999):
-    # NOT CORRECT!    
-    # tx[tx == MV] = np.mean(remove_points_with_MV(y, tx, MV))
-    raise NotImplementedError
+    tx[tx == MV] = np.nan
+    col_mean = np.nanmean(tx, axis=0)
+    inds = np.where(np.isnan(tx))
+    tx[inds] = np.take(col_mean, inds[1])
+    return tx
 
 # Replaces every missing value entry with zero (modifies tx)
 def replace_MV_by_zero(y, tx, MV=-999):
     tx[tx == MV] = 0
 
 # Removes points deviated from the mean more than a std factor given
-def remove_outliers(y, tx=None, threshold=4, ddof=0):    
-    # Calculate zscore
-    #xy = np.asanyarray(y.copy().drop(['Prediction'], axis=1))
-    #y_zscores = (xy - xy.mean(axis=0, keepdims=True)) / xy.std(axis=0, ddof=ddof, keepdims=True)
-    # Clean Outliers
-    #z_train = np.abs(y_zscores)
-    #return y[(z_train < threshold).all(axis=1)]
-    raise NotImplementedError
+def remove_outliers(y, tx, threshold=4):    
+    z_train = np.abs((tx - tx.mean(axis=0, keepdims=True)) / tx.std(axis=0, ddof=0, keepdims=True))
+    return y[((z_train < threshold).all(axis=1))], tx[((z_train < threshold).all(axis=1))]
 
 # Z standarization of the data
 def standarize(y, tx):
@@ -57,9 +54,11 @@ def standarize(y, tx):
 # Add new features to increase (partially) regression order
 def feature_augmentation(y, tx, k):
     tx_aux = tx
-    # Here we should add the cross products also if k > 2! 
     for i in range(2,k+1):
         tx_aux = np.append(tx_aux, np.power(tx,i), axis=1)
+    if i > 1:
+        cross_terms_order_2 = np.array([tx[:, i] * tx[:, j] for i in range(tx.shape[1]) for j in range(i+1, tx.shape[1])]).T
+        tx_aux = np.append(tx_aux, cross_terms_order_2, axis=1)
     return tx_aux
         
 

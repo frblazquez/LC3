@@ -8,13 +8,11 @@ from proj1_helpers   import *
 from preprocessing   import *
 from implementations import *
 
-MV = -999
-
 # Hyper parameters for GD, SGD and least squares
-MISSING_VALUES_THRESHOLDS = [0.5]      #[0, 0.25,0.5,0.75]
-CORRELATION_THRESHOLDS    = [0.8,0.85] #[0.75, 0.8, 0.85, 0.9, 0.95, 1.0]
-OUTLIERS_THRESHOLDS       = [3]        #[3,4,5,6]
-AUGMENTATION_DEGREES      = [2,3]      #[1,2,3,4,5]
+MISSING_VALUES_THRESHOLDS = [0.5]   #[0, 0.25,0.5,0.75]
+CORRELATION_THRESHOLDS    = [0.8]   #[0.75, 0.8, 0.85, 0.9, 0.95, 1.0]
+OUTLIERS_THRESHOLDS       = [3]     #[3,4,5,6]
+AUGMENTATION_DEGREES      = [2]     #[1,2,3,4,5]
 
 
 # Function to chose by cross validation the best hyper parameters for our model
@@ -63,10 +61,10 @@ def cross_validation(y, tx, k, mvt=0.7, ct=0.85, ot=3, ad=2):
         tx_train = np.delete(tx_train, high_MV_freq_features, axis=1)
         tx_test  = np.delete(tx_test,  high_MV_freq_features, axis=1)
   
-        #replace_MV_by_average(y_train, tx_train)# Shouldn't we remove y argument from those functions not needing it?
-        #replace_MV_by_average(y_test,  tx_test) # Shouldn't we replace MV in test set with average in train set?
+        replace_MV_by_average(y_train, tx_train)# Shouldn't we remove y argument from those functions not needing it?
+        replace_MV_by_average(y_test,  tx_test) # Shouldn't we replace MV in test set with average in train set?
 
-        #y_train, tx_train = remove_outliers(y_train, tx_train,ot)
+        y_train, tx_train = remove_outliers(y_train, tx_train,ot)
 
         tx_train = feature_augmentation(y_train, tx_train, ad)
         tx_test  = feature_augmentation(y_test,  tx_test,  ad)  
