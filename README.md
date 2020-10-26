@@ -8,12 +8,12 @@ We have provided the foloving files and folders:
 
 -scripts
 
-      implementations.py:  The implementation of the requested functions.
+      implementations.py
       preprocesing.py 
-      proj1_helpers.py: Helper functions for cleaning, finding parameters and utility functions (gradient, mean square error....). Needed for run.py and implementation.py
-      run.py : Containing the executable to produce our best predictions.
+      proj1_helpers.py
+      run.py 
       project1.ipynb 
-      run.py: produce the best prediction 
+      run.py
       train.ipnb 
 
        -least_squares 
