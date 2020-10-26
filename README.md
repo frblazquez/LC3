@@ -17,9 +17,9 @@ We have provided the foloving files and folders:
       train.ipnb 
       cross_validation.py 
 In each folder you will find the algorithm corresponding to the name of the folder
-       * least_squares 
-       * logistic 
-       * ridge regression 
+ * least_squares 
+ * logistic 
+ * ridge regression 
       
 * report.pdf : The final report
 
