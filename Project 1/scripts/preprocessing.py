@@ -56,7 +56,7 @@ def feature_augmentation(y, tx, k):
     tx_aux = tx
     for i in range(2,k+1):
         tx_aux = np.append(tx_aux, np.power(tx,i), axis=1)
-    if i > 1:
+    if k > 1:
         cross_terms_order_2 = np.array([tx[:, i] * tx[:, j] for i in range(tx.shape[1]) for j in range(i+1, tx.shape[1])]).T
         tx_aux = np.append(tx_aux, cross_terms_order_2, axis=1)
     return tx_aux
