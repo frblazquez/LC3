@@ -3,7 +3,7 @@ Francisco Javier Blázquez Martínez
 Andrés Montero Ranc
 David Alonso del Barrio
 
-Structure
+Structure:
 We have provided the foloving files and folders:
 
 -scripts
