@@ -23,7 +23,7 @@ In each folder you will find the algorithm corresponding to the name of the fold
       
 * report.pdf : The final report
 
-* To reproduce our results, executing run.py
+* To reproduce our results,  First you have to decompress the files, then executing run.py.
 
 
 
