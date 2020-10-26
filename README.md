@@ -22,7 +22,7 @@ We have provided the foloving files and folders:
       cross_validation.py 
 -report.pdf : The final report
 
-
+To reproduce our results, executing run.py
 
 
 
