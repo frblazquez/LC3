@@ -1,12 +1,12 @@
-Machine learning Project 1
-Francisco Javier Blázquez Martínez
-Andrés Montero Ranc
-David Alonso del Barrio
+# Machine learning Project 1
+* Francisco Javier Blázquez Martínez
+* Andrés Montero Ranc
+* David Alonso del Barrio
 
-Structure:
+# Structure:
 We have provided the foloving files and folders:
 
--scripts
+* scripts
 
       implementations.py
       preprocesing.py 
@@ -15,14 +15,15 @@ We have provided the foloving files and folders:
       project1.ipynb 
       run.py
       train.ipnb 
-
-       -least_squares 
-       -logistic 
-       - ridge regression 
       cross_validation.py 
--report.pdf : The final report
+In each folder you will find the algorithm corresponding to the name of the folder
+       * least_squares 
+       * logistic 
+       * ridge regression 
+      
+* report.pdf : The final report
 
-To reproduce our results, executing run.py
+* To reproduce our results, executing run.py
 
 
 
