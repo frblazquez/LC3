@@ -15,14 +15,14 @@ from preprocessing   import *
 from implementations import *
 
 # Hyper parameters for GD, SGD and least squares
-MISSING_VALUES_THRESHOLDS = [1]
-CORRELATION_THRESHOLDS    = [1]
+MISSING_VALUES_THRESHOLDS = [0.99]
+CORRELATION_THRESHOLDS    = [0.95]
 OUTLIERS_THRESHOLDS       = [10]     
-AUGMENTATION_DEGREES      = [1,2,4]
+AUGMENTATION_DEGREES      = [2]
 
 # Hyper parameters for LR and RLR
-REG_LOG_REG_LAMBDA = [1]              
-REG_LOG_REG_GAMMA  = [1e-7]   
+LAMBDAS = [1]              
+GAMMAS  = [1e-7]   
 
 # Least squares grid search for hyper parameters with cross validation
 def train_least_squares(y, tx):
@@ -65,7 +65,7 @@ def train_logistic_regression(y, tx):
         for ct in CORRELATION_THRESHOLDS:
             for ot in OUTLIERS_THRESHOLDS:
                 for ad in AUGMENTATION_DEGREES:
-                    for gamma in REG_LOG_REG_GAMMA:
+                    for gamma in GAMMAS:
                         p = cross_validation_LR(y, tx, 5, mvt, ct, ot, ad, gamma)
                         print('Precission '+str(p)+' obtained for MVT='+str(mvt)+' CT='+str(ct)+' OT='+str(ot)+' AD='+str(ad)+ ' GAMMA='+str(gamma)) 
 
@@ -82,8 +82,8 @@ def train_reg_logistic_regression(y, tx):
         for ct in CORRELATION_THRESHOLDS:
             for ot in OUTLIERS_THRESHOLDS:
                 for ad in AUGMENTATION_DEGREES:
-                    for lamb in REG_LOG_REG_LAMBDA:
-                        for gamma in REG_LOG_REG_GAMMA:
+                    for lamb in LAMBDAS:
+                        for gamma in GAMMAS:
                             p = cross_validation_RLR(y, tx, 5, mvt, ct, ot, ad, lamb, gamma)
                             print('Precission '+str(p)+' obtained for MVT='+str(mvt)+' CT='+str(ct)+' OT='+str(ot)+' AD='+str(ad)+' LAMBDA='+str(lamb)+' GAMMA='+str(gamma)) 
 
