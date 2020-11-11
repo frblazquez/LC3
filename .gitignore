@@ -5,3 +5,5 @@
 .ipynb_checkpoints/
 __pycache__/
 
+# Do not add project two data without Zunino's permission
+Project\ 2/data/
