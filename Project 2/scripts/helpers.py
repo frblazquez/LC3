@@ -58,13 +58,13 @@ def create_r_formula(day, variables):
     return formula+equals
 
 # Get the adjusted R squared using the sm library
-def get_model_r2_adj(name, formula, df):
+def get_model_r2_adj(formula, df):
     mods = smf.ols(formula=formula, data=df)
     res = mods.fit()
     return res.rsquared_adj
 
 # Get the information about the model (sm library)
-def get_model_summary(name, formula, df):
+def get_model_summary(formula, df):
     mods = smf.ols(formula=formula, data=df)
     res = mods.fit()
     return res.summary()
