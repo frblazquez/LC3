@@ -196,5 +196,22 @@ def plot_confidence_intervals(data, day):
     print("R^2: {}".format(model.score(X,y)))
     print()
 
+# Create a r-style formula
+def create_r_formula(day, variables):
+    formula = f"day_{day} ~ "
+    equals = "+".join(variables)
+    return formula+equals
+
+# Get the adjusted R squared using the sm library
+def get_model_r2_adj(name, formula, df):
+    mods = smf.ols(formula=formula, data=df)
+    res = mods.fit()
+    return res.rsquared_adj
+
+# Get the information about the model (sm library)
+def get_model_summary(name, formula, df):
+    mods = smf.ols(formula=formula, data=df)
+    res = mods.fit()
+    return res.summary() 
 
 
