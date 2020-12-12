@@ -26,6 +26,23 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from   statsmodels.sandbox.regression.predstd import wls_prediction_std
 
+# Rename columns in dataframe to work with them in statistical analisys
+def rename_cols(data): 
+    # We rename some columns for having an easier reference
+    data.rename(columns = {'Calcined kaolinite content (%)':'Kaolinite_content'}, inplace = True)
+    data.rename(columns = {'Dv,50 (µm)':'Dv50'                                 }, inplace = True)
+    data.rename(columns = {'BET Specific surface (m2/g)':'BET_specific_surface'}, inplace = True)
+    data.rename(columns = {'Span (-)':'span'                                   }, inplace = True)
+
+    data.rename(columns = {'STD'  : 'STD_1D'}, inplace = True)
+    data.rename(columns = {'STD.1': 'STD_3D'}, inplace = True)
+    data.rename(columns = {'STD.2': 'STD_7D'}, inplace = True)
+    data.rename(columns = {'STD.3':'STD_28D'}, inplace = True)
+    data.rename(columns = {'STD.4':'STD_90D'}, inplace = True)
+
+    # Sorting allows us to plot functions more easily
+    data = data.sort_values('Kaolinite_content')
+
 # Plots linear regression model and print model function and metrics
 def leave_one_out_validation(X, y, day, model=LinearRegression()):
     # Train the model
@@ -252,19 +269,19 @@ def plot_confidence_intervals(data, day):
     print()
 
 # Create a r-style formula
-def create_r_formula(day, variables):
-    formula = f"day_{day} ~ "
-    equals = "+".join(variables)
-    return formula+equals
+def create_r_formula(day, variable):
+    formula = f"day_{day} ~ Kaolinite_content + Kaolinite_content_square + {variable}"
+#     equals = "+".join(variables)
+    return formula
 
 # Get the adjusted R squared using the sm library
-def get_model_r2_adj(name, formula, df):
+def get_model_r2_adj(formula, df):
     mods = smf.ols(formula=formula, data=df)
     res = mods.fit()
     return res.rsquared_adj
 
 # Get the information about the model (sm library)
-def get_model_summary(name, formula, df):
+def get_model_summary(formula, df):
     mods = smf.ols(formula=formula, data=df)
     res = mods.fit()
     return res.summary() 
