@@ -175,9 +175,10 @@ def get_model_validation(X, y, model=LinearRegression()):
     return mean_squared_error(y, predicted)
 
 
-# Function to perform feature selection from those given as parameter. It choses those
-# features that better complements kaolinite content for achieving the best adj. R2 and MSE
-def feature_selection(data, features, days=[1,3,7,28,90], print_report=False):
+# Function to perform feature selection from those given as parameter over a model with base features
+# the Kaolinite content (in degree one and two) and those given in "other_base_features" parameter. 
+# It choses those features that better complements kaolinite content for achieving the best adj. R2 and MSE
+def feature_selection(data, features, days=[1,3,7,28,90], print_report=False, other_base_features=[]):
     # Empty dataframe to be fill with all the results
     results = pd.DataFrame(index=features) 
     # For every day we want to do feature selection
@@ -192,9 +193,8 @@ def feature_selection(data, features, days=[1,3,7,28,90], print_report=False):
         for feature in features:   
             # IMPORTANT! Metrics can cheat us if we drop NaNs!!
             # IMPORTANT! That's what we have to rely the features we are testing!!
-            df = data[['Kaolinite_content', feature, day]].dropna()
+            df = data[['Kaolinite_content', feature] + other_base_features + [day]].dropna()
             df['Kaolinite_content_square'] = (df['Kaolinite_content'].values)**2
-#             df = df.rename(columns={str(i)+'D':'day_'+str(i)})
             
             # Kaolinite content is always in our features in degree one and two
             X = df[['Kaolinite_content', 'Kaolinite_content_square', feature]].values
@@ -440,3 +440,42 @@ def deviated_points_detection(data, day):
     print(data[data['day_'+str(day)] > upper_bound])
     print("Pesimistic deviated points:")
     print(data[data['day_'+str(day)] < lower_bound])
+
+
+def visualize_data(x1,y1,x3,y3,x7,y7,x28,y28,x90,y90):
+    # Show points using matplotlib.pyplot library
+    fig, ax = plt.subplots(figsize=(12, 8))
+    plt.plot(x1,y1,'c^',x3,y3,'bs',x7,y7,'r^',x28,y28,'go', x90,y90,'m^' )
+    plt.xlabel('%Kaolinite Content')
+    plt.ylabel('Compressive Strenght')
+    
+    d1_patch  = mpatches.Patch(color='cyan',      label='After  1 day')
+    d3_patch  = mpatches.Patch(color='blue',      label='After  3 days')
+    d7_patch  = mpatches.Patch(color='red',       label='After  7 days')
+    d28_patch = mpatches.Patch(color='darkgreen', label='After 28 days')
+    d90_patch = mpatches.Patch(color='purple',    label='After 90 days')
+    plt.legend(handles=[d1_patch,d3_patch,d7_patch,d28_patch,d90_patch])
+
+    plt.show()
+
+
+def load_full_data(path):
+    # Read full data and remove empty lines
+    data_full = pd.read_excel(path,sheet_name='Clays_CS',na_values=['-'])
+    data_full.dropna(how="all", inplace=True)
+
+    # Read clay properties
+    data_clay   = pd.read_excel(path,sheet_name='Clays_properties', na_values=['-'])
+
+    # Merge to have the whole dataset
+    data_full_clay = pd.merge(data_full, data_clay, left_on='Clay', right_on='Clay', how='left')
+    data_full_clay = data_full_clay.sort_values("Calcined kaolinite content (%)")
+
+    # We rename some columns for having an easier reference
+    rename_cols(data_full_clay)
+
+    return data_full_clay
+
+
+
+
