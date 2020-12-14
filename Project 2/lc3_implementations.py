@@ -281,6 +281,17 @@ def get_model_data_kaolinite(data, day, normalize=False, drop_nan=True, replace_
     return df_aux
 
 
+def parable_estabilization(X, coefs):
+    vertex = - coefs[0]/(2*coefs[1])
+    result = np.dot(X,coefs)
+    if 0 < vertex and vertex < 100:
+        i = 0
+        vertex_min = coefs[1]*vertex**2 + coefs[0]*vertex
+        while i < len(result) and X[i][0] < vertex:
+            result[i] = vertex_min
+            i = i + 1
+    return result
+
 # Function for ploting 0.9, 0.8, 0.7 and 0.6 confidence intervals of a model
 # based on kaolinite content for a given day
 def plot_confidence_intervals(data, day):    
@@ -320,16 +331,32 @@ def plot_confidence_intervals(data, day):
 
     ax.scatter(X[:,0], y, edgecolors=(0, 0, 0))
     
-    ax.plot(X[:,0], np.dot(X,[conf60[0][1],conf60[0][2]]) + conf60[0][0],'b--',label='CI 60%')
-    ax.plot(X[:,0], np.dot(X,[conf70[0][1],conf70[0][2]]) + conf70[0][0],'c--',label='CI 70%')
-    ax.plot(X[:,0], np.dot(X,[conf80[0][1],conf80[0][2]]) + conf80[0][0],'m--',label='CI 80%')
-    ax.plot(X[:,0], np.dot(X,[conf90[0][1],conf90[0][2]]) + conf90[0][0],color='navy', linestyle='dashed',label='CI 90%')
+    f   = np.dot(X, model.coef_)
+    f90 = np.dot(X,[conf90[0][1],conf90[0][2]])
+    f80 = np.dot(X,[conf80[0][1],conf80[0][2]])
+    f70 = np.dot(X,[conf70[0][1],conf70[0][2]])
+    f60 = np.dot(X,[conf60[0][1],conf60[0][2]])
+
+    if day==1 or day==3:
+        f   = parable_estabilization(X, model.coef_)
+        f90 = parable_estabilization(X, [conf90[0][1],conf90[0][2]])
+        f80 = parable_estabilization(X, [conf80[0][1],conf80[0][2]])
+        f70 = parable_estabilization(X, [conf70[0][1],conf70[0][2]])
+        f60 = parable_estabilization(X, [conf60[0][1],conf60[0][2]])
+                
+    ax.plot(X[:,0], f60 + conf60[0][0],'b--',label='CI 80%')
+    ax.plot(X[:,0], f70 + conf70[0][0],'c--',label='CI 85%')
+    ax.plot(X[:,0], f80 + conf80[0][0],'m--',label='CI 90%')
+    ax.plot(X[:,0], f90 + conf90[0][0],color='navy', linestyle='dashed',label='CI 95%')
     
-    ax.plot(X[:,0], np.dot(X,model.coef_) + model.intercept_,'r-')
-    ax.plot(X[:,0], np.dot(X,[conf90[1][1],conf90[1][2]]) + conf90[1][0],color='navy', linestyle='dashed')
-    ax.plot(X[:,0], np.dot(X,[conf80[1][1],conf80[1][2]]) + conf80[1][0],'m--')
-    ax.plot(X[:,0], np.dot(X,[conf70[1][1],conf70[1][2]]) + conf70[1][0],'c--')
-    ax.plot(X[:,0], np.dot(X,[conf60[1][1],conf60[1][2]]) + conf60[1][0],'b--')
+    # If the parable vertex is inside the range we have increasing-decreasing or the other way around
+    ax.plot(X[:,0], f + model.intercept_,'r-')
+
+    # Uncomment if you want to show the upper limit of the confidence interval
+    #ax.plot(X[:,0], np.dot(X,[conf90[1][1],conf90[1][2]]) + conf90[1][0],color='navy', linestyle='dashed')
+    #ax.plot(X[:,0], np.dot(X,[conf80[1][1],conf80[1][2]]) + conf80[1][0],'m--')
+    #ax.plot(X[:,0], np.dot(X,[conf70[1][1],conf70[1][2]]) + conf70[1][0],'c--')
+    #ax.plot(X[:,0], np.dot(X,[conf60[1][1],conf60[1][2]]) + conf60[1][0],'b--')
     ax.legend()
     plt.axhline(y = OPC, color = 'darkorange', linestyle = '--', label='OPC') # OPC reference
     plt.legend()
