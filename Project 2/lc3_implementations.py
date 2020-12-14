@@ -119,24 +119,7 @@ def compute_WLS_model(data, day, summary=False, plot=False, show_bounds=False, s
         ax.legend(loc="best");
         plt.show()
     return mod_wls, res_wls
-
-# Rename columns in dataframe to work with them in statistical analisys
-def rename_cols(data): 
-    # We rename some columns for having an easier reference
-    data.rename(columns = {'Calcined kaolinite content (%)':'Kaolinite_content'}, inplace = True)
-    data.rename(columns = {'Dv,50 (µm)':'Dv50'                                 }, inplace = True)
-    data.rename(columns = {'BET Specific surface (m2/g)':'BET_specific_surface'}, inplace = True)
-    data.rename(columns = {'Span (-)':'span'                                   }, inplace = True)
-
-    data.rename(columns = {'STD'  : 'STD_1D'}, inplace = True)
-    data.rename(columns = {'STD.1': 'STD_3D'}, inplace = True)
-    data.rename(columns = {'STD.2': 'STD_7D'}, inplace = True)
-    data.rename(columns = {'STD.3':'STD_28D'}, inplace = True)
-    data.rename(columns = {'STD.4':'STD_90D'}, inplace = True)
-
-    # Sorting allows us to plot functions more easily
-    data = data.sort_values('Kaolinite_content')
-
+    
 # Plots linear regression model and print model function and metrics
 def leave_one_out_validation(X, y, day, model=LinearRegression()):
     # Train the model
@@ -377,6 +360,44 @@ def get_model_r2_adj(formula, df):
 def get_model_summary(formula, df):
     mods = smf.ols(formula=formula, data=df)
     res = mods.fit()
-    return res.summary() 
+    return res.summary()
+
+# Rename columns in dataframe to work with them in statistical analisys
+def rename_cols(data): 
+    # We rename some columns for having an easier reference
+    data.rename(columns = {'Calcined kaolinite content (%)':'Kaolinite_content'}, inplace = True)
+    data.rename(columns = {'Dv,50 (µm)':'Dv50'                                 }, inplace = True)
+    data.rename(columns = {'BET Specific surface (m2/g)':'BET_specific_surface'}, inplace = True)
+    data.rename(columns = {'Span (-)':'span'                                   }, inplace = True)
+
+    data.rename(columns = {'STD'  : 'STD_1D'}, inplace = True)
+    data.rename(columns = {'STD.1': 'STD_3D'}, inplace = True)
+    data.rename(columns = {'STD.2': 'STD_7D'}, inplace = True)
+    data.rename(columns = {'STD.3':'STD_28D'}, inplace = True)
+    data.rename(columns = {'STD.4':'STD_90D'}, inplace = True)
+
+    # Sorting allows us to plot functions more easily
+    data = data.sort_values('Kaolinite_content')
+
+def rename_std_cols(data):
+    # We rename some columns for having an easier reference
+    data.rename(columns = {'Calcined kaolinite content (%)':'Kaolinite_content'}, inplace = True)
+    data.rename(columns = {'Dv,50 (µm)':'Dv50'                                 }, inplace = True)
+    data.rename(columns = {'BET Specific surface (m2/g)':'BET_specific_surface'}, inplace = True)
+
+    data.rename(columns = {'1D'  : 'day_1'}, inplace = True)
+    data.rename(columns = {'3D': 'day_3'}, inplace = True)
+    data.rename(columns = {'7D': 'day_7'}, inplace = True)
+    data.rename(columns = {'28D':'day_28'}, inplace = True)
+    data.rename(columns = {'90D':'day_90'}, inplace = True)
+
+    data.rename(columns = {'STD'  : 'STD_1D'}, inplace = True)
+    data.rename(columns = {'STD.1': 'STD_3D'}, inplace = True)
+    data.rename(columns = {'STD.2': 'STD_7D'}, inplace = True)
+    data.rename(columns = {'STD.3':'STD_28D'}, inplace = True)
+    data.rename(columns = {'STD.4':'STD_90D'}, inplace = True)
+
+    # Sorting allows us to plot functions more easily
+    data = data.sort_values('Kaolinite_content')
 
 
