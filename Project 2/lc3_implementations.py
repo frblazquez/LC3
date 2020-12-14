@@ -124,7 +124,7 @@ def compute_WLS_model(data, day, summary=False, plot=False, show_bounds=False, s
 def leave_one_out_validation(X, y, day, model=LinearRegression()):
     # Train the model
     model.fit(X, y) 
-
+    
     # Plot the results
     fig, ax = plt.subplots(figsize=(12, 8))
     #OPC REFERENCIAS
@@ -140,7 +140,7 @@ def leave_one_out_validation(X, y, day, model=LinearRegression()):
         OPC = 50.42
     plt.axhline(y = OPC, color = 'darkorange', linestyle = '--', label='OPC') # OPC reference
     plt.legend()
-
+    
     if X.shape[1]==1:
         print(f"f(x) = {model.intercept_} + {model.coef_[0]}*x")
         ax.plot(X, np.dot(X,model.coef_) + model.intercept_,'r-',label='regression line')
@@ -283,7 +283,7 @@ def get_model_data_kaolinite(data, day, normalize=False, drop_nan=True, replace_
 
 # Function for ploting 0.9, 0.8, 0.7 and 0.6 confidence intervals of a model
 # based on kaolinite content for a given day
-def plot_confidence_intervals(data, day):
+def plot_confidence_intervals(data, day):    
     X = data[['Kaolinite_content','Kaolinite_content_square']].values
     y = data['day_'+str(day)]
     
