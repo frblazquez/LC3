@@ -357,9 +357,31 @@ def get_model_r2_adj(formula, df):
     return res.rsquared_adj
 
 # Get the information about the model (sm library)
-def get_model_summary(formula, df):
+def get_model_summary(formula, df, param_plot=False):
     mods = smf.ols(formula=formula, data=df)
     res = mods.fit()
+    
+    if(param_plot):
+        # feature names
+        variables = res.params.index
+
+        # quantifying uncertainty!
+        coefficients = res.params.values
+        p_values = res.pvalues
+        standard_errors = res.bse.values
+
+        # sort them all by coefficients
+        l1, l2, l3, l4 = zip(*sorted(zip(coefficients[1:], variables[1:], standard_errors[1:], p_values[1:])))
+
+        # plot
+        plt.errorbar(l1, np.array(range(len(l1))), xerr= 2*np.array(l3), linewidth = 1,
+                     linestyle = 'none',marker = 'o',markersize= 3,
+                     markerfacecolor = 'black',markeredgecolor = 'black', capsize= 5)
+
+        plt.vlines(0,0, len(l1), linestyle = '--')
+
+        plt.yticks(range(len(l2)),l2);
+        plt.show()
     return res.summary()
 
 # Rename columns in dataframe to work with them in statistical analisys
