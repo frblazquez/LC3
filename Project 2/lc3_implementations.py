@@ -423,3 +423,20 @@ def rename_std_cols(data):
     data = data.sort_values('Kaolinite_content')
 
 
+def deviated_points_detection(data, day):    
+    data = get_model_data_kaolinite(data, 'day_'+str(day))
+    
+    X = data[['Kaolinite_content','Kaolinite_content_square']].values
+    y = data['day_'+str(day)]
+    
+    res = smf.ols(formula='day_'+str(day)+' ~ Kaolinite_content + Kaolinite_content_square', data=data).fit()
+    
+    conf90 = res.conf_int(alpha=0.1)
+    
+    lower_bound = np.dot(X,[conf90[0][1],conf90[0][2]]) + conf90[0][0]
+    upper_bound = np.dot(X,[conf90[1][1],conf90[1][2]]) + conf90[1][0]
+    
+    print("Optimistic deviated points:")
+    print(data[data['day_'+str(day)] > upper_bound])
+    print("Pesimistic deviated points:")
+    print(data[data['day_'+str(day)] < lower_bound])
