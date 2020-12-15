@@ -141,14 +141,18 @@ def leave_one_out_validation(X, y, day, model=LinearRegression()):
     plt.axhline(y = OPC, color = 'darkorange', linestyle = '--', label='OPC') # OPC reference
     plt.legend()
     
+    f = np.dot(X, model.coef_)
     if X.shape[1]==1:
         print(f"f(x) = {model.intercept_} + {model.coef_[0]}*x")
         ax.plot(X, np.dot(X,model.coef_) + model.intercept_,'r-',label='regression line')
         ax.scatter(X, y, edgecolors=(0, 0, 0))
+    
     else:
         # This could be generalized but degree n >= 3 leads to overfitting!
         print(f"f(x) = {model.intercept_} + {model.coef_[0]}*x + {model.coef_[1]}*x^2")
-        ax.plot(X[:,0], np.dot(X,model.coef_) + model.intercept_,'r-', label='regression line')
+        if day==1 or day==3:
+            f = parable_estabilization(X, model.coef_)
+        ax.plot(X[:,0], f + model.intercept_,'r-', label='regression line')
         ax.scatter(X[:,0], y, edgecolors=(0, 0, 0))
 
     ax.set_xlabel('% Kaolinite content')
