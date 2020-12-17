@@ -26,99 +26,6 @@ import matplotlib.patches as mpatches
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from   statsmodels.sandbox.regression.predstd import wls_prediction_std
-
-
-def create_weights(data_dx, std_squared=False):
-    """
-    Helper function to compute the weights
-    
-    :data_dx: dataframe only with columns to model
-              [day_x, STD_xD, Kaolinite_content]
-    
-    :returns: array of weights to input in the WLS
-    """
-    
-    std_head = [i for i in data_dx if i.startswith('STD_')][-1]
-    std = data_dx[std_head].values
-    norm_std = (std-std.min())/(std.max()-std.min())
-    norm_std[norm_std==0] = 1e-4
-    
-    if(std_squared):
-        return 1./(norm_std**2)
-    else:
-        return 1./(norm_std)
-
-def compute_WLS_model(data, day, summary=False, plot=False, show_bounds=False, show_ols=False, weights2=False):
-    """
-    Helper function to compute the Weighted Least
-    Squares model. It returns the model and the results.
-    It can print the summary and show a plot describing
-    the wls. It can also provide in the plot the bounds
-    given by the weights but also a comparison with OLS 
-    
-    :data: dataframe, this may contain all columns but
-         must contain at_least columns day_x, STD_xD, 
-         Kaolinite_content with that specific sintax
-    :day: int with the day we want to model, must be
-          1, 3, 7, 28, or 90.
-    :summary: if True prints the summary of the model
-    :plot: if True plots the wls linear model prediction
-    :show_bounds: shows the upper and lower quantiles
-                  with the weights given and 0,975 ci
-    :show_ols: if True shows a comparison with an
-               Ordinary Leat Squares model prediction
-    :weights2: when True weights are 1/std^2 instead of
-               1/std
-              
-    :returns: modelWLS: the model, resultWLS: its results
-    """
-    data_dx = data[["Kaolinite_content", f"day_{day}", f"STD_{day}D"]]
-    data_dx = data_dx.dropna()
-    
-    x = data_dx["Kaolinite_content"].values
-    X = sm.add_constant(x, has_constant='skip')
-    Yx  = data_dx[f"day_{day}"].values
-    weightsx = create_weights(data_dx)
-    if(weights2):
-        weightsx = create_weights(data_dx, std_squared=True)
-
-    mod_wls = sm.WLS(Yx, X, weights=weightsx)
-    res_wls = mod_wls.fit()
-    
-    if(summary):
-        print(res_wls.summary())
-    if(plot):
-        # plot WLS
-        prstd, iv_l, iv_u = wls_prediction_std(res_wls)
-
-        fig, ax = plt.subplots(figsize=(8,6))
-
-        #Datapoints
-        ax.plot(x, Yx, 'o', label="Data")
-
-        # WLS (weighted least squares) prediction
-        ax.plot(x, res_wls.fittedvalues, 'g--.', label="WLS")
-        if(show_bounds):
-            ax.plot(x, iv_u, 'g--')
-            ax.plot(x, iv_l, 'g--')
-        ax.set_xlabel('% Kaolinite content')
-        ax.set_ylabel('Compressive strength')
-        
-        if(show_ols):
-            # OLS (ordinary least squares) prediction
-            res_ols = sm.OLS(Yx, X).fit()
-
-            ax.plot(x, res_ols.fittedvalues, 'r--', label="OLS")
-            if(show_bounds):
-                # Calculate prediction interval
-                tppf = stats.t.ppf(0.975, res_ols.df_resid)
-                prstd_ols, iv_l_ols, iv_u_ols = wls_prediction_std(res_ols)
-                ax.plot(x, iv_u_ols, 'r--')
-                ax.plot(x, iv_l_ols, 'r--')
-
-        ax.legend(loc="best");
-        plt.show()
-    return mod_wls, res_wls
     
 # Plots linear regression model and print model function and metrics
 def leave_one_out_validation(X, y, day, model=LinearRegression()):
@@ -298,7 +205,7 @@ def parable_estabilization(X, coefs):
 
 # Function for ploting 0.9, 0.8, 0.7 and 0.6 confidence intervals of a model
 # based on kaolinite content for a given day
-def plot_confidence_intervals(data, day):    
+def plot_confidence_intervals(data, day, img_path=None):    
     X = data[['Kaolinite_content','Kaolinite_content_square']].values
     y = data['day_'+str(day)]
     
@@ -364,12 +271,17 @@ def plot_confidence_intervals(data, day):
     ax.legend()
     plt.axhline(y = OPC, color = 'darkorange', linestyle = '--', label='OPC') # OPC reference
     plt.legend()
-    ax.set_xlabel('% Kaolinite content')
-    ax.set_ylabel('Compressive strength')
+    ax.set_xlabel('Kaolinite content (%)')
+    ax.set_ylabel('Compressive strength (MPa)')
     plt.xticks(range(0, 100, 10))
     plt.grid(color='lightgrey',which= 'both', linestyle='-', linewidth=1)
+
+    if img_path != None:
+        plt.savefig(img_path)
+
     plt.show()
     
+
     # Metrics for the model
     print("MSE: {}".format(mean_squared_error(y, predicted)))
     print("R^2: {}".format(model.score(X,y)))
@@ -509,4 +421,95 @@ def load_full_data(path):
 
 
 
+def create_weights(data_dx, std_squared=False):
+    """
+    Helper function to compute the weights
+    
+    :data_dx: dataframe only with columns to model
+              [day_x, STD_xD, Kaolinite_content]
+    
+    :returns: array of weights to input in the WLS
+    """
+    
+    std_head = [i for i in data_dx if i.startswith('STD_')][-1]
+    std = data_dx[std_head].values
+    norm_std = (std-std.min())/(std.max()-std.min())
+    norm_std[norm_std==0] = 1e-4
+    
+    if(std_squared):
+        return 1./(norm_std**2)
+    else:
+        return 1./(norm_std)
+
+def compute_WLS_model(data, day, summary=False, plot=False, show_bounds=False, show_ols=False, weights2=False):
+    """
+    Helper function to compute the Weighted Least
+    Squares model. It returns the model and the results.
+    It can print the summary and show a plot describing
+    the wls. It can also provide in the plot the bounds
+    given by the weights but also a comparison with OLS 
+    
+    :data: dataframe, this may contain all columns but
+         must contain at_least columns day_x, STD_xD, 
+         Kaolinite_content with that specific sintax
+    :day: int with the day we want to model, must be
+          1, 3, 7, 28, or 90.
+    :summary: if True prints the summary of the model
+    :plot: if True plots the wls linear model prediction
+    :show_bounds: shows the upper and lower quantiles
+                  with the weights given and 0,975 ci
+    :show_ols: if True shows a comparison with an
+               Ordinary Leat Squares model prediction
+    :weights2: when True weights are 1/std^2 instead of
+               1/std
+              
+    :returns: modelWLS: the model, resultWLS: its results
+    """
+    data_dx = data[["Kaolinite_content", f"day_{day}", f"STD_{day}D"]]
+    data_dx = data_dx.dropna()
+    
+    x = data_dx["Kaolinite_content"].values
+    X = sm.add_constant(x, has_constant='skip')
+    Yx  = data_dx[f"day_{day}"].values
+    weightsx = create_weights(data_dx)
+    if(weights2):
+        weightsx = create_weights(data_dx, std_squared=True)
+
+    mod_wls = sm.WLS(Yx, X, weights=weightsx)
+    res_wls = mod_wls.fit()
+    
+    if(summary):
+        print(res_wls.summary())
+    if(plot):
+        # plot WLS
+        prstd, iv_l, iv_u = wls_prediction_std(res_wls)
+
+        fig, ax = plt.subplots(figsize=(8,6))
+
+        #Datapoints
+        ax.plot(x, Yx, 'o', label="Data")
+
+        # WLS (weighted least squares) prediction
+        ax.plot(x, res_wls.fittedvalues, 'g--.', label="WLS")
+        if(show_bounds):
+            ax.plot(x, iv_u, 'g--')
+            ax.plot(x, iv_l, 'g--')
+        ax.set_xlabel('% Kaolinite content')
+        ax.set_ylabel('Compressive strength')
+        
+        if(show_ols):
+            # OLS (ordinary least squares) prediction
+            res_ols = sm.OLS(Yx, X).fit()
+
+            ax.plot(x, res_ols.fittedvalues, 'r--', label="OLS")
+            if(show_bounds):
+                # Calculate prediction interval
+                tppf = stats.t.ppf(0.975, res_ols.df_resid)
+                prstd_ols, iv_l_ols, iv_u_ols = wls_prediction_std(res_ols)
+                ax.plot(x, iv_u_ols, 'r--')
+                ax.plot(x, iv_l_ols, 'r--')
+
+        ax.legend(loc="best");
+        plt.show()
+    return mod_wls, res_wls
 
