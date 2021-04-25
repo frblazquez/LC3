@@ -6,8 +6,7 @@
 #
 # Description:
 # Implementations for lc3 compressive strength data analysis and confidence intervals
-# The first functions defined are functions used in the lc3_fulldata and lc3_merged_data notebooks. 
-# After these functions appear three more sets of functions, the specific functions of the lc3_merged_data, lc3_modelling_with_std notebook and the lc3_full_data notebook
+
 
 # Libraries for general data management
 import pandas as pd
@@ -27,25 +26,6 @@ import matplotlib.patches as mpatches
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from   statsmodels.sandbox.regression.predstd import wls_prediction_std
-
-    
-# FUNCTIONS USED IN NOTEBOOKS lc3_merged_data and lc3_full_data
-
-# Show points using matplotlib.pyplot library    
-def visualize_data(x1,y1,x3,y3,x7,y7,x28,y28,x90,y90):
-    fig, ax = plt.subplots(figsize=(12, 8))
-    plt.plot(x1,y1,'c^',x3,y3,'bs',x7,y7,'r^',x28,y28,'go', x90,y90,'m^' )
-    plt.xlabel('%Kaolinite Content')
-    plt.ylabel('Compressive Strenght')
-    
-    d1_patch  = mpatches.Patch(color='cyan',      label='After  1 day')
-    d3_patch  = mpatches.Patch(color='blue',      label='After  3 days')
-    d7_patch  = mpatches.Patch(color='red',       label='After  7 days')
-    d28_patch = mpatches.Patch(color='darkgreen', label='After 28 days')
-    d90_patch = mpatches.Patch(color='purple',    label='After 90 days')
-    plt.legend(handles=[d1_patch,d3_patch,d7_patch,d28_patch,d90_patch])
-
-    plt.show()
     
 # Plots linear regression model and print model function and metrics
 def leave_one_out_validation(X, y, day, model=LinearRegression()):
@@ -54,7 +34,7 @@ def leave_one_out_validation(X, y, day, model=LinearRegression()):
     
     # Plot the results
     fig, ax = plt.subplots(figsize=(12, 8))
-    #OPC REFERENCES
+    #OPC REFERENCIAS
     if(day==1): 
         OPC = 23.75
     if(day==3): 
@@ -95,17 +75,16 @@ def leave_one_out_validation(X, y, day, model=LinearRegression()):
     print(f"R^2: {model.score(X,y)}")
 
 
-# Function that fixes the problem of  irregular data distribution in the feature domain on days 1 and 3.
-def parable_estabilization(X, coefs):
-    vertex = - coefs[0]/(2*coefs[1])
-    result = np.dot(X,coefs)
-    if 0 < vertex and vertex < 100:
-        i = 0
-        vertex_min = coefs[1]*vertex**2 + coefs[0]*vertex
-        while i < len(result) and X[i][0] < vertex:
-            result[i] = vertex_min
-            i = i + 1
-    return result
+
+# Function to return the R2 and validation score for a model (linear regression by default)
+def get_model_validation(X, y, model=LinearRegression()):
+    # Train the model
+    model.fit(X, y) 
+    # Get the list of predictions obtained while validating
+    predicted = cross_val_predict(model, X, y, cv=LeaveOneOut())
+    # Return the metrics
+    return mean_squared_error(y, predicted)
+
 
 # Function to perform feature selection from those given as parameter over a model with base features
 # the Kaolinite content (in degree one and two) and those given in "other_base_features" parameter. 
@@ -176,40 +155,6 @@ def feature_selection(data, features, days=[1,3,7,28,90], print_report=False, ot
         
     return results.style.highlight_min(color = 'lightgreen', axis = 0, subset=subset_mse).highlight_max(color = 'red', axis = 0, subset=subset_R2)
 
-# Get the information about the model (sm library)
-def get_model_summary(formula, df, param_plot=False):
-    mods = smf.ols(formula=formula, data=df)
-    res = mods.fit()
-    
-    if(param_plot):
-        # feature names
-        variables = res.params.index
-
-        # quantifying uncertainty!
-        coefficients = res.params.values
-        p_values = res.pvalues
-        standard_errors = res.bse.values
-
-        # sort them all by coefficients
-        l1, l2, l3, l4 = zip(*sorted(zip(coefficients[1:], variables[1:], standard_errors[1:], p_values[1:])))
-
-        # plot
-        plt.errorbar(l1, np.array(range(len(l1))), xerr= 2*np.array(l3), linewidth = 1,
-                     linestyle = 'none',marker = 'o',markersize= 3,
-                     markerfacecolor = 'black',markeredgecolor = 'black', capsize= 5)
-
-        plt.vlines(0,0, len(l1), linestyle = '--')
-
-        plt.yticks(range(len(l2)),l2);
-        plt.show()
-    return res.summary()
-
-# Create a r-style formula
-def create_r_formula(day, variable):
-    formula = f"day_{day} ~ Kaolinite_content + Kaolinite_content_square + {variable}"
-#     equals = "+".join(variables)
-    return formula
-
 # Funcion for returning the data ready for creating models with kaolinite and a given feature
 def get_model_data(data, feature, day, normalize=False, drop_nan=True, replace_nan=False):
     # Get kaolinite content in degree one and two and the parameter feature
@@ -227,6 +172,36 @@ def get_model_data(data, feature, day, normalize=False, drop_nan=True, replace_n
         df_aux =(df_aux-df_aux.min())/(df_aux.max()-df_aux.min())
     
     return df_aux
+
+# Funcion for returning the data ready for creating models with kaolinite 
+def get_model_data_kaolinite(data, day, normalize=False, drop_nan=True, replace_nan=False):
+    # Get kaolinite content in degree one and two and the parameter feature
+    df_aux = data[['Kaolinite_content', day]]
+    df_aux.insert(1, 'Kaolinite_content_square', data['Kaolinite_content']**2, True)
+    # Copy for data integrity if we replace NaN and when renaming
+    df_aux = df_aux.copy()
+#     df_aux.rename(columns = {day : 'day_'+day[0]}, inplace = True)
+    
+    if drop_nan:
+        df_aux = df_aux.dropna()
+    elif replace_nan:
+        df_aux.fillna(value=df_aux[feature].mean(), inplace=True)    
+    if normalize:
+        df_aux =(df_aux-df_aux.min())/(df_aux.max()-df_aux.min())
+    
+    return df_aux
+
+
+def parable_estabilization(X, coefs):
+    vertex = - coefs[0]/(2*coefs[1])
+    result = np.dot(X,coefs)
+    if 0 < vertex and vertex < 100:
+        i = 0
+        vertex_min = coefs[1]*vertex**2 + coefs[0]*vertex
+        while i < len(result) and X[i][0] < vertex:
+            result[i] = vertex_min
+            i = i + 1
+    return result
 
 # Function for ploting 0.9, 0.8, 0.7 and 0.6 confidence intervals of a model
 # based on kaolinite content for a given day
@@ -312,28 +287,45 @@ def plot_confidence_intervals(data, day, img_path=None):
     print("R^2: {}".format(model.score(X,y)))
     print()
 
+# Create a r-style formula
+def create_r_formula(day, variable):
+    formula = f"day_{day} ~ Kaolinite_content + Kaolinite_content_square + {variable}"
+#     equals = "+".join(variables)
+    return formula
 
-# Funcion for returning the data ready for creating models with kaolinite 
-def get_model_data_kaolinite(data, day, normalize=False, drop_nan=True, replace_nan=False):
-    # Get kaolinite content in degree one and two and the parameter feature
-    df_aux = data[['Kaolinite_content', day]]
-    df_aux.insert(1, 'Kaolinite_content_square', data['Kaolinite_content']**2, True)
-    # Copy for data integrity if we replace NaN and when renaming
-    df_aux = df_aux.copy()
-#     df_aux.rename(columns = {day : 'day_'+day[0]}, inplace = True)
+# Get the adjusted R squared using the sm library
+def get_model_r2_adj(formula, df):
+    mods = smf.ols(formula=formula, data=df)
+    res = mods.fit()
+    return res.rsquared_adj
+
+# Get the information about the model (sm library)
+def get_model_summary(formula, df, param_plot=False):
+    mods = smf.ols(formula=formula, data=df)
+    res = mods.fit()
     
-    if drop_nan:
-        df_aux = df_aux.dropna()
-    elif replace_nan:
-        df_aux.fillna(value=df_aux[feature].mean(), inplace=True)    
-    if normalize:
-        df_aux =(df_aux-df_aux.min())/(df_aux.max()-df_aux.min())
-    
-    return df_aux
+    if(param_plot):
+        # feature names
+        variables = res.params.index
 
+        # quantifying uncertainty!
+        coefficients = res.params.values
+        p_values = res.pvalues
+        standard_errors = res.bse.values
 
+        # sort them all by coefficients
+        l1, l2, l3, l4 = zip(*sorted(zip(coefficients[1:], variables[1:], standard_errors[1:], p_values[1:])))
 
-#SPECIFIC FUNCTIONS NOTEBOOK lc3_merged_data
+        # plot
+        plt.errorbar(l1, np.array(range(len(l1))), xerr= 2*np.array(l3), linewidth = 1,
+                     linestyle = 'none',marker = 'o',markersize= 3,
+                     markerfacecolor = 'black',markeredgecolor = 'black', capsize= 5)
+
+        plt.vlines(0,0, len(l1), linestyle = '--')
+
+        plt.yticks(range(len(l2)),l2);
+        plt.show()
+    return res.summary()
 
 # Rename columns in dataframe to work with them in statistical analisys
 def rename_cols(data): 
@@ -351,11 +343,7 @@ def rename_cols(data):
 
     # Sorting allows us to plot functions more easily
     data = data.sort_values('Kaolinite_content')
-    
-    
-#SPECIFIC FUNCTIONS NOTEBOOK lc3_modelling_with_std
 
-# Rename columns in dataframe to work with them in statistical analisys
 def rename_std_cols(data):
     # We rename some columns for having an easier reference
     data.rename(columns = {'Calcined kaolinite content (%)':'Kaolinite_content'}, inplace = True)
@@ -375,11 +363,74 @@ def rename_std_cols(data):
     data.rename(columns = {'STD.4':'STD_90D'}, inplace = True)
 
     # Sorting allows us to plot functions more easily
-    data = data.sort_values('Kaolinite_content')  
-    
+    data = data.sort_values('Kaolinite_content')
 
-# Helper function to compute the weights. Returns: array of weights to input in the WLS
+
+def deviated_points_detection(data, day):    
+    data = get_model_data_kaolinite(data, 'day_'+str(day))
+    
+    X = data[['Kaolinite_content','Kaolinite_content_square']].values
+    y = data['day_'+str(day)]
+    
+    res = smf.ols(formula='day_'+str(day)+' ~ Kaolinite_content + Kaolinite_content_square', data=data).fit()
+    
+    conf90 = res.conf_int(alpha=0.1)
+    
+    lower_bound = np.dot(X,[conf90[0][1],conf90[0][2]]) + conf90[0][0]
+    upper_bound = np.dot(X,[conf90[1][1],conf90[1][2]]) + conf90[1][0]
+    
+    print("Optimistic deviated points:")
+    print(data[data['day_'+str(day)] > upper_bound])
+    print("Pesimistic deviated points:")
+    print(data[data['day_'+str(day)] < lower_bound])
+
+
+def visualize_data(x1,y1,x3,y3,x7,y7,x28,y28,x90,y90):
+    # Show points using matplotlib.pyplot library
+    fig, ax = plt.subplots(figsize=(12, 8))
+    plt.plot(x1,y1,'c^',x3,y3,'bs',x7,y7,'r^',x28,y28,'go', x90,y90,'m^' )
+    plt.xlabel('%Kaolinite Content')
+    plt.ylabel('Compressive Strenght')
+    
+    d1_patch  = mpatches.Patch(color='cyan',      label='After  1 day')
+    d3_patch  = mpatches.Patch(color='blue',      label='After  3 days')
+    d7_patch  = mpatches.Patch(color='red',       label='After  7 days')
+    d28_patch = mpatches.Patch(color='darkgreen', label='After 28 days')
+    d90_patch = mpatches.Patch(color='purple',    label='After 90 days')
+    plt.legend(handles=[d1_patch,d3_patch,d7_patch,d28_patch,d90_patch])
+
+    plt.show()
+
+
+def load_full_data(path):
+    # Read full data and remove empty lines
+    data_full = pd.read_excel(path,sheet_name='Clays_CS',na_values=['-'])
+    data_full.dropna(how="all", inplace=True)
+
+    # Read clay properties
+    data_clay   = pd.read_excel(path,sheet_name='Clays_properties', na_values=['-'])
+
+    # Merge to have the whole dataset
+    data_full_clay = pd.merge(data_full, data_clay, left_on='Clay', right_on='Clay', how='left')
+    data_full_clay = data_full_clay.sort_values("Calcined kaolinite content (%)")
+
+    # We rename some columns for having an easier reference
+    rename_cols(data_full_clay)
+
+    return data_full_clay
+
+
+
 def create_weights(data_dx, std_squared=False):
+    """
+    Helper function to compute the weights
+    
+    :data_dx: dataframe only with columns to model
+              [day_x, STD_xD, Kaolinite_content]
+    
+    :returns: array of weights to input in the WLS
+    """
+    
     std_head = [i for i in data_dx if i.startswith('STD_')][-1]
     std = data_dx[std_head].values
     norm_std = (std-std.min())/(std.max()-std.min())
@@ -390,10 +441,30 @@ def create_weights(data_dx, std_squared=False):
     else:
         return 1./(norm_std)
 
-#  Helper function to compute the Weighted Least Squares model. It returns the model and the results.
-#  It can print the summary and show a plot describing the wls. It can also provide in the plot the bounds given by the weights but also a      comparison with OLS     
 def compute_WLS_model(data, day, summary=False, plot=False, show_bounds=False, show_ols=False, weights2=False):
-
+    """
+    Helper function to compute the Weighted Least
+    Squares model. It returns the model and the results.
+    It can print the summary and show a plot describing
+    the wls. It can also provide in the plot the bounds
+    given by the weights but also a comparison with OLS 
+    
+    :data: dataframe, this may contain all columns but
+         must contain at_least columns day_x, STD_xD, 
+         Kaolinite_content with that specific sintax
+    :day: int with the day we want to model, must be
+          1, 3, 7, 28, or 90.
+    :summary: if True prints the summary of the model
+    :plot: if True plots the wls linear model prediction
+    :show_bounds: shows the upper and lower quantiles
+                  with the weights given and 0,975 ci
+    :show_ols: if True shows a comparison with an
+               Ordinary Leat Squares model prediction
+    :weights2: when True weights are 1/std^2 instead of
+               1/std
+              
+    :returns: modelWLS: the model, resultWLS: its results
+    """
     data_dx = data[["Kaolinite_content", f"day_{day}", f"STD_{day}D"]]
     data_dx = data_dx.dropna()
     
@@ -440,65 +511,5 @@ def compute_WLS_model(data, day, summary=False, plot=False, show_bounds=False, s
 
         ax.legend(loc="best");
         plt.show()
-    return mod_wls, res_wls    
-    
-# Function to return the R2 and validation score for a model (linear regression by default)
-def get_model_validation(X, y, model=LinearRegression()):
-    # Train the model
-    model.fit(X, y) 
-    # Get the list of predictions obtained while validating
-    predicted = cross_val_predict(model, X, y, cv=LeaveOneOut())
-    # Return the metrics
-    return mean_squared_error(y, predicted)
-
-
-
-# Get the adjusted R squared using the sm library
-def get_model_r2_adj(formula, df):
-    mods = smf.ols(formula=formula, data=df)
-    res = mods.fit()
-    return res.rsquared_adj
-    
-#SPECIFIC FUNCTIONS NOTEBOOK lc3_full_data    
-
-def load_full_data(path):
-    # Read full data and remove empty lines
-    data_full = pd.read_excel(path,sheet_name='Clays_CS',na_values=['-'])
-    data_full.dropna(how="all", inplace=True)
-
-    # Read clay properties
-    data_clay   = pd.read_excel(path,sheet_name='Clays_properties', na_values=['-'])
-
-    # Merge to have the whole dataset
-    data_full_clay = pd.merge(data_full, data_clay, left_on='Clay', right_on='Clay', how='left')
-    data_full_clay = data_full_clay.sort_values("Calcined kaolinite content (%)")
-
-    # We rename some columns for having an easier reference
-    rename_cols(data_full_clay)
-
-    return data_full_clay
-
-
-def deviated_points_detection(data, day):    
-    data = get_model_data_kaolinite(data, 'day_'+str(day))
-    
-    X = data[['Kaolinite_content','Kaolinite_content_square']].values
-    y = data['day_'+str(day)]
-    
-    res = smf.ols(formula='day_'+str(day)+' ~ Kaolinite_content + Kaolinite_content_square', data=data).fit()
-    
-    conf90 = res.conf_int(alpha=0.1)
-    
-    lower_bound = np.dot(X,[conf90[0][1],conf90[0][2]]) + conf90[0][0]
-    upper_bound = np.dot(X,[conf90[1][1],conf90[1][2]]) + conf90[1][0]
-    
-    print("Optimistic deviated points:")
-    print(data[data['day_'+str(day)] > upper_bound])
-    print("Pesimistic deviated points:")
-    print(data[data['day_'+str(day)] < lower_bound])
-
-
-
-
-
+    return mod_wls, res_wls
 
